@@ -70,9 +70,13 @@
       width: 108px;
       height: 108px;
       object-fit: contain;
+      border-radius: 50%;
+      background: #fff;
+      padding: 4px;
+      border: 2.5px solid var(--gold);
       margin: 0 auto 12px;
       display: block;
-      filter: drop-shadow(0 4px 10px rgba(197, 160, 89, 0.25));
+      box-shadow: 0 6px 18px rgba(197, 160, 89, 0.25);
     }
     .login-title {
       margin: 0 0 4px;
@@ -1410,17 +1414,36 @@
       .replace(/الحياء/g, 'الأحياء')
       .replace(/الحصاء/g, 'الإحصاء')
       .replace(/علم الجتماع/g, 'علم الاجتماع')
-      .replace(/اخلص /g, 'إخلاص ')
-      .replace(/فتح ا /g, 'فتح الله ')
-      .replace(/عبدا /g, 'عبدالله ')
-      .replace(/عبد ا /g, 'عبد الله ')
-      .replace(/ضيف ا/g, 'ضيف الله')
-      .replace(/(^|\s)ا(?=\s|$)/g, '$1الله')
-      .replace(/عبدا(?=\s|$)/g, 'عبدالله')
-      .replace(/لء(?=\s|$)/g, 'لاء')
+      // إصلاح أربطة الله (في حال عدم وجود مصفوفة Widths)
+      .replace(/فتح ا(?=[\s:]|$)/g, 'فتح الله')
+      .replace(/ضيف ا(?=[\s:]|$)/g, 'ضيف الله')
+      .replace(/عبدا(?=[\s:]|$)/g, 'عبدالله')
+      .replace(/عبد ا(?=[\s:]|$)/g, 'عبد الله')
+      .replace(/جادا(?=[\s:]|$)/g, 'جادالله')
+      .replace(/(^|[\s:])ا(?=\s|$)/g, '$1الله')
+      // إصلاح حرف الميم المفقود في أربطة (لم)
+      .replace(/عبدالنعم/g, 'عبدالمنعم')
+      .replace(/عبدالول[ىي]/g, 'عبدالمولى')
+      .replace(/عبداللك/g, 'عبدالملك')
+      .replace(/عبدالجيد/g, 'عبدالمجيد')
+      .replace(/عبدالطلب/g, 'عبدالمطلب')
+      .replace(/عبدالنصف/g, 'عبدالمنصف')
+      .replace(/عبدالهيمن/g, 'عبدالمهيمن')
+      .replace(/عبدالؤمن/g, 'عبدالمؤمن')
+      .replace(/(^|\s)الشاظي(?=\s|$)/g, '$1المشاظي')
+      .replace(/(^|\s)ساله(?=\s|$)/g, '$1سالمة')
+      // إصلاح حرف الألف المفقود في أربطة (لا)
       .replace(/الكيلني/g, 'الكيلاني')
+      .replace(/ميلد/g, 'ميلاد')
+      .replace(/عبدالسلم/g, 'عبدالسلام')
       .replace(/السلم(?=\s|$)/g, 'السلام')
       .replace(/اخلص(?=\s|$)/g, 'إخلاص')
+      .replace(/(^|\s)ولء(?=\s|$)/g, '$1ولاء')
+      .replace(/(^|\s)الء(?=\s|$)/g, '$1آلاء')
+      .replace(/(^|\s)علء(?=\s|$)/g, '$1علاء')
+      .replace(/(^|\s)نجلء(?=\s|$)/g, '$1نجلاء')
+      .replace(/(^|\s)شهلء(?=\s|$)/g, '$1شهلاء')
+      .replace(/لء(?=\s|$)/g, 'لاء')
       .replace(/(^|\s)صلح(?=\s|$)/g, '$1صلاح')
       .replace(/(^|\s)احلم(?=\s|$)/g, '$1أحلام')
       .replace(/(^|\s)اسلم(?=\s|$)/g, '$1إسلام')
@@ -1428,12 +1451,10 @@
       .replace(/(^|\s)جلل(?=\s|$)/g, '$1جلال')
       .replace(/(^|\s)هلل(?=\s|$)/g, '$1هلال')
       .replace(/(^|\s)طلل(?=\s|$)/g, '$1طلال')
-      .replace(/موسىى/g, 'موسى')
-      .replace(/موسيى/g, 'موسى')
-      .replace(/البلعزي/g, 'البلعزي')
-      .replace(/الدرسيي/g, 'الدرسي')
+      // إصلاح تكرار الياء/الألف المقصورة في نهاية الكلمة
+      .replace(/(موس|عيس|مصطف|مرتض|مجتب|نجو|سلو|تقو|ليل|رؤ)[ىي]{2}(?=\s|$)/g, '$1ى')
+      .replace(/([\u0621-\u064A])[ىي]{2}(?=\s|$)/g, '$1ي')
       .replace(/العامي/g, 'العام')
-      .replace(/الدراسيي/g, 'الدراسي')
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -2477,7 +2498,25 @@
             const tu = fObj.raw.match(/\/ToUnicode\s+(\d+)\s+0\s+R/);
             if (tu) {
               const tuBytes = await getStreamBytes(parseInt(tu[1], 10));
-              if (tuBytes) fontMaps.set(fm[1], parseToUnicodeCMap(bytesToLatin1(tuBytes)));
+              if (tuBytes) {
+                const fmap = parseToUnicodeCMap(bytesToLatin1(tuBytes));
+                const fcM = fObj.raw.match(/\/FirstChar\s+(\d+)/);
+                const wRefM = fObj.raw.match(/\/Widths\s+(\d+)\s+0\s+R/);
+                if (fcM && wRefM) {
+                  const fc = parseInt(fcM[1], 10);
+                  const wObj = objs.get(parseInt(wRefM[1], 10));
+                  if (wObj) {
+                    const wArr = wObj.raw.replace(/[\[\]]/g, ' ').trim().split(/\s+/).map(Number);
+                    for (let wi = 0; wi < wArr.length; wi++) {
+                      const code = fc + wi;
+                      if (fmap.get(code) === 'ا' && wArr[wi] >= 750) {
+                        fmap.set(code, 'هللا');
+                      }
+                    }
+                  }
+                }
+                fontMaps.set(fm[1], fmap);
+              }
             }
           }
         }
@@ -2594,14 +2633,14 @@
 
       const directorate = box1(-290, -255, 50, 550);
       const schoolLine = box1(-325, -295, 50, 500);
-      const school = schoolLine.replace(/^مدرسة:\s*/, '').trim();
+      const school = schoolLine.replace(/^مدرسة:\s*/, '').replace(/^[:\s]+/, '').trim();
       const locLine = box1(-355, -330, 50, 480);
-      const location = locLine.replace(/^الكائنة بـ\s*:\s*/, '').trim();
+      const location = locLine.replace(/^الكائنة بـ\s*:\s*/, '').replace(/^وق\//, 'سلوق/').trim();
 
       const nameSub = p1.items.filter(it => it.y >= -392 && it.y <= -365 && it.x >= 20 && it.x <= 436.2 && it.t !== ':').sort((a, b) => a.x - b.x);
       const name = visualRtlToLogical(nameSub.map(s => s.t).join(''));
-      const birthInfo = box1(-430, -400, 315, 480);
-      const motherName = box1(-430, -400, 20, 235);
+      const birthInfo = box1(-430, -400, 315, 480).replace(/^لد:\s*/, '').trim();
+      const motherName = box1(-430, -400, 20, 235).replace(/^امل:\s*/, '').trim();
       const nationalId = box1(-475, -445, 320, 460);
       let regNo = box1(-475, -445, 20, 150);
       const footerRef = box1(-835, -810, 10, 450);
@@ -2612,7 +2651,7 @@
 
       const nationality = box1(-520, -490, 300, 460) || 'ليبية';
       const studentStatus = box1(-520, -490, 20, 150) || 'مستجدة';
-      const coordinator = box1(-565, -535, 280, 475);
+      const coordinator = box1(-565, -535, 280, 475).replace(/^متحانات:\s*/, '').trim();
       const enrollmentType = box1(-565, -535, 20, 150) || 'نظامي';
 
       // Page 2 summary extraction
