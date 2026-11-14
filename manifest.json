@@ -1,0 +1,11 @@
+{
+  "name": "منظومة أرشيف الوثائق",
+  "short_name": "أرشيف الوثائق",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a"
+}
