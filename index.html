@@ -2271,13 +2271,20 @@
       let ds = stIdx + 6;
       if (raw[ds] === '\r' && raw[ds + 1] === '\n') ds += 2;
       else if (raw[ds] === '\n' || raw[ds] === '\r') ds += 1;
-      const endSt = raw.lastIndexOf('endstream');
-      let sl = twoPageU8.subarray(o.start + ds, o.start + endSt);
-      let end = sl.length;
-      if (end >= 2 && sl[end - 2] === 13 && sl[end - 1] === 10) end -= 2;
-      else if (end >= 1 && (sl[end - 1] === 10 || sl[end - 1] === 13)) end -= 1;
-      const b = sl.subarray(0, end);
-      if (/\/FlateDecode/.test(raw.slice(0, stIdx))) {
+      const dictStr = raw.slice(0, stIdx);
+      let b;
+      const lenM = dictStr.match(/\/Length\s+(\d+)(?!\s+\d+\s+R)/);
+      if (lenM) {
+        b = twoPageU8.subarray(o.start + ds, o.start + ds + parseInt(lenM[1], 10));
+      } else {
+        const endSt = raw.lastIndexOf('endstream');
+        let sl = twoPageU8.subarray(o.start + ds, o.start + endSt);
+        let end = sl.length;
+        if (end >= 2 && sl[end - 2] === 13 && sl[end - 1] === 10) end -= 2;
+        else if (end >= 1 && (sl[end - 1] === 10 || sl[end - 1] === 13)) end -= 1;
+        b = sl.subarray(0, end);
+      }
+      if (/\/FlateDecode/.test(dictStr)) {
         try { return await inflatePdfBytes(b); } catch (e) { return b; }
       }
       return b;
@@ -2368,32 +2375,91 @@
 
     async function getStreamBytes(id) {
       const o = objs.get(id);
-      if (!o) return null;
+      if (!o || o.start < 0) return null;
       const raw = o.raw;
       const stIdx = raw.indexOf('stream');
       if (stIdx === -1) return null;
+      const dictStr = raw.slice(0, stIdx);
       let ds = stIdx + 6;
       if (raw[ds] === '\r' && raw[ds + 1] === '\n') ds += 2;
       else if (raw[ds] === '\n' || raw[ds] === '\r') ds += 1;
-      const endSt = raw.lastIndexOf('endstream');
-      let slice = u8.subarray(o.start + ds, o.start + endSt);
-      let end = slice.length;
-      if (end >= 2 && slice[end - 2] === 13 && slice[end - 1] === 10) end -= 2;
-      else if (end >= 1 && (slice[end - 1] === 10 || slice[end - 1] === 13)) end -= 1;
-      const body = slice.subarray(0, end);
-      if (/\/FlateDecode/.test(raw.slice(0, stIdx))) {
+      let body;
+      const lenM = dictStr.match(/\/Length\s+(\d+)(?!\s+\d+\s+R)/);
+      if (lenM) {
+        body = u8.subarray(o.start + ds, o.start + ds + parseInt(lenM[1], 10));
+      } else {
+        const endSt = raw.lastIndexOf('endstream');
+        let slice = u8.subarray(o.start + ds, o.start + endSt);
+        let end = slice.length;
+        if (end >= 2 && slice[end - 2] === 13 && slice[end - 1] === 10) end -= 2;
+        else if (end >= 1 && (slice[end - 1] === 10 || slice[end - 1] === 13)) end -= 1;
+        body = slice.subarray(0, end);
+      }
+      if (/\/FlateDecode/.test(dictStr)) {
         try { return await inflatePdfBytes(body); } catch (e) { return body; }
       }
       return body;
     }
 
-    const pages = [];
-    for (const [id, o] of objs.entries()) {
-      if (/\/Type\s*\/Page\b/.test(o.raw) && !/\/Type\s*\/Pages\b/.test(o.raw)) {
-        pages.push({ id, raw: o.raw });
+    // Unpack PDF 1.5+ /ObjStm compressed object streams
+    for (const [id, o] of [...objs.entries()]) {
+      if (/\/Type\s*\/ObjStm\b/.test(o.raw)) {
+        const fM = o.raw.match(/\/First\s+(\d+)/);
+        const nM = o.raw.match(/\/N\s+(\d+)/);
+        if (!fM || !nM) continue;
+        const first = parseInt(fM[1], 10);
+        const n = parseInt(nM[1], 10);
+        const decBytes = await getStreamBytes(id);
+        if (!decBytes) continue;
+        const dec = bytesToLatin1(decBytes);
+        const header = dec.slice(0, first).trim().split(/\s+/);
+        for (let idx = 0; idx < n * 2 && idx + 1 < header.length; idx += 2) {
+          const oid = parseInt(header[idx], 10);
+          const off = parseInt(header[idx + 1], 10);
+          const nextOff = (idx + 2 < n * 2 && idx + 3 < header.length) ? parseInt(header[idx + 3], 10) : (dec.length - first);
+          const body = dec.slice(first + off, first + nextOff).trim();
+          if (!objs.has(oid)) objs.set(oid, { start: -1, end: -1, raw: body });
+        }
       }
     }
-    pages.sort((a, b) => a.id - b.id);
+
+    // Traverse /Catalog -> /Pages -> /Kids to preserve exact page order
+    const pages = [];
+    let rootPagesId = null;
+    for (const [id, o] of objs.entries()) {
+      if (/\/Type\s*\/Catalog\b/.test(o.raw)) {
+        const pm = o.raw.match(/\/Pages\s+(\d+)\s+0\s+R/);
+        if (pm) { rootPagesId = parseInt(pm[1], 10); break; }
+      }
+    }
+    if (rootPagesId !== null) {
+      const visitedPages = new Set();
+      const walkPages = (nodeId) => {
+        if (visitedPages.has(nodeId)) return;
+        visitedPages.add(nodeId);
+        const o = objs.get(nodeId);
+        if (!o) return;
+        if (/\/Type\s*\/Pages\b/.test(o.raw)) {
+          const km = o.raw.match(/\/Kids\s*\[([\s\S]*?)\]/);
+          if (km) {
+            for (const rm of km[1].matchAll(/(\d+)\s+0\s+R/g)) {
+              walkPages(parseInt(rm[1], 10));
+            }
+          }
+        } else if (/\/Type\s*\/Page\b/.test(o.raw)) {
+          pages.push({ id: nodeId, raw: o.raw });
+        }
+      };
+      walkPages(rootPagesId);
+    }
+    if (!pages.length) {
+      for (const [id, o] of objs.entries()) {
+        if (/\/Type\s*\/Page\b/.test(o.raw) && !/\/Type\s*\/Pages\b/.test(o.raw)) {
+          pages.push({ id, raw: o.raw });
+        }
+      }
+      pages.sort((a, b) => a.id - b.id);
+    }
 
     async function extractPageData(pageObj) {
       let resRaw = pageObj.raw;
