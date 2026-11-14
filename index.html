@@ -987,6 +987,131 @@
       border-color: transparent;
       box-shadow: 0 3px 10px rgba(197, 160, 89, 0.25);
     }
+    .backup-actions-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 720px) {
+      .backup-actions-list { grid-template-columns: repeat(3, 1fr); }
+    }
+    .backup-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 13px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      color: var(--navy);
+      font-family: inherit;
+      text-align: right;
+      cursor: pointer;
+      transition: transform 0.14s, box-shadow 0.14s, border-color 0.14s;
+    }
+    .backup-action-btn:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(1, 77, 78, 0.08); }
+    .backup-action-btn:active { transform: scale(0.99); }
+    .backup-action-btn.primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(1, 77, 78, 0.22);
+    }
+    .backup-action-btn.danger {
+      border-color: rgba(185, 28, 28, 0.28);
+      background: #fef2f2;
+      color: #991b1b;
+    }
+    .backup-action-btn.danger:hover { border-color: #b91c1c; background: #fee2e2; }
+    .backup-ico-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(1, 77, 78, 0.08);
+      color: var(--primary);
+    }
+    .backup-action-btn.primary .backup-ico-badge { background: rgba(255, 255, 255, 0.18); color: #fff; }
+    .backup-action-btn.danger .backup-ico-badge { background: rgba(185, 28, 28, 0.12); color: #b91c1c; }
+    .backup-action-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .backup-action-title { font-weight: 800; font-size: 0.88rem; line-height: 1.3; }
+    .backup-action-sub { font-size: 0.74rem; opacity: 0.78; font-weight: 600; }
+    .about-dev-credit {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 0.88rem;
+      color: var(--primary);
+    }
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: 4px;
+      margin-top: 16px;
+      padding: 8px 6px;
+      background: linear-gradient(180deg, rgba(197, 160, 89, 0.06) 0%, rgba(197, 160, 89, 0.12) 100%);
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+    .page-btn {
+      min-width: 28px;
+      height: 30px;
+      padding: 0 5px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(197, 160, 89, 0.55);
+      background: #fffdf8;
+      color: #8a6420;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.76rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      box-shadow: 0 2px 5px rgba(197, 160, 89, 0.12);
+    }
+    @media (min-width: 540px) {
+      .pagination-bar { gap: 7px; padding: 12px 10px; border-radius: 14px; }
+      .page-btn { min-width: 36px; height: 36px; padding: 0 10px; font-size: 0.86rem; border-radius: 10px; }
+    }
+    .page-btn:hover:not(:disabled):not(.active) {
+      background: #fdf3dc;
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+    .page-btn.active {
+      background: linear-gradient(135deg, #d4af66 0%, #b58938 100%);
+      color: #fff;
+      border-color: #9e752a;
+      box-shadow: 0 4px 12px rgba(181, 137, 56, 0.38);
+      transform: scale(1.05);
+    }
+    .page-btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .page-ellipsis {
+      color: #9e752a;
+      font-weight: 800;
+      padding: 0 1px;
+      font-size: 0.78rem;
+      flex-shrink: 0;
+      user-select: none;
+    }
     .modal-box-mobile {
       border-radius: 18px;
       max-height: 95vh;
@@ -1127,6 +1252,7 @@
 
         <div id="searchResultsInfo" style="margin-bottom:10px;font-size:0.85rem;font-weight:700;color:var(--muted);"></div>
         <div id="resultsContainer" class="results-grid"></div>
+        <div id="paginationContainer" class="pagination-bar hidden"></div>
       </section>
       <!-- VIEW 3: IMPORT & EXPORT -->
       <section id="importExportView" class="view-section hidden">
@@ -1146,14 +1272,39 @@
         </div>
 
         <div class="card">
-          <h2 class="card-title">💾 النسخ الاحتياطي وتصدير الأرشيف</h2>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-primary" id="exportJsonBtn">📤 تصدير الأرشيف الكامل (JSON)</button>
-            <label class="btn btn-outline" style="cursor:pointer;">
-              📥 استيراد نسخة احتياطية (JSON)
+          <h2 class="card-title" style="display:flex;align-items:center;gap:8px;">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>
+            <span>النسخ الاحتياطي وتصدير الأرشيف</span>
+          </h2>
+          <div class="backup-actions-list">
+            <button type="button" class="backup-action-btn primary" id="exportJsonBtn">
+              <span class="backup-ico-badge">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </span>
+              <span class="backup-action-text">
+                <span class="backup-action-title">تصدير الأرشيف الكامل (JSON)</span>
+                <span class="backup-action-sub">حفظ نسخة احتياطية من جميع السجلات</span>
+              </span>
+            </button>
+            <label class="backup-action-btn">
+              <span class="backup-ico-badge">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </span>
+              <span class="backup-action-text">
+                <span class="backup-action-title">استيراد نسخة احتياطية (JSON)</span>
+                <span class="backup-action-sub">استرجاع الأرشيف من ملف محفوظ</span>
+              </span>
               <input type="file" id="importJsonInput" accept=".json,application/json" class="hidden" />
             </label>
-            <button type="button" class="btn btn-danger" id="clearAllBtn">🗑️ مسح جميع السجلات</button>
+            <button type="button" class="backup-action-btn danger" id="clearAllBtn">
+              <span class="backup-ico-badge">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </span>
+              <span class="backup-action-text">
+                <span class="backup-action-title">مسح جميع السجلات</span>
+                <span class="backup-action-sub">حذف كافة البيانات المخزنة محلياً</span>
+              </span>
+            </button>
           </div>
         </div>
       </section>
@@ -1194,6 +1345,10 @@
             <li><strong>طباعة بطريقتين:</strong> طباعة صفحتين منفصلتين (A4)، أو دمج صفحتي الصحيفة في ورقة واحدة أفقية تماماً كميزة المتصفح.</li>
             <li><strong>ذاكرة تخزين واسعة:</strong> حفظ آلاف السجلات والصور محلياً بأمان مع إمكانية التصدير والاستيراد الاحتياطي.</li>
           </ul>
+          <div class="about-dev-credit">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
+            <span>تطوير الأستاذ يحيى التيغي</span>
+          </div>
         </div>
       </section>
     </main>
@@ -1430,27 +1585,68 @@
       .replace(/عبدالنصف/g, 'عبدالمنصف')
       .replace(/عبدالهيمن/g, 'عبدالمهيمن')
       .replace(/عبدالؤمن/g, 'عبدالمؤمن')
-      .replace(/(^|\s)الشاظي(?=\s|$)/g, '$1المشاظي')
-      .replace(/(^|\s)ساله(?=\s|$)/g, '$1سالمة')
-      // إصلاح حرف الألف المفقود في أربطة (لا)
-      .replace(/الكيلني/g, 'الكيلاني')
+      .replace(/عبدالحسن/g, 'عبدالمحسن')
+      .replace(/عبدالهدي/g, 'عبدالمهدي')
+      .replace(/عبدالقصود/g, 'عبدالمقصود')
+      .replace(/(^|[\s:])الشاظي(?=\s|$)/g, '$1المشاظي')
+      .replace(/(^|[\s:])الشاطي(?=\s|$)/g, '$1المشاطي')
+      .replace(/(^|[\s:])البروك(?=\s|$)/g, '$1المبروك')
+      .replace(/(^|[\s:])الدني(?=\s|$)/g, '$1المدني')
+      .replace(/(^|[\s:])الهد([يى])(?=\s|$)/g, '$1المهد$2')
+      .replace(/(^|[\s:])لمين(?=\s|$)/g, '$1لامين')
+      .replace(/(^|[\s:])ر\s+هف(?=\s|$)/g, '$1رهف')
+      .replace(/(^|[\s:])لياء(?=\s|$)/g, '$1لمياء')
+      .replace(/(^|[\s:])ساله(?=\s|$)/g, '$1سالمة')
+      .replace(/(^|[\s:])حليه(?=\s|$)/g, '$1حليمة')
+      .replace(/(^|[\s:])سليه(?=\s|$)/g, '$1سليمة')
+      .replace(/(^|[\s:])سلى(?=\s|$)/g, '$1سلمى')
+      .replace(/(^|[\s:])سلان(?=\s|$)/g, '$1سلمان')
+      .replace(/(^|[\s:])الؤمن(?=\s|$)/g, '$1المؤمن')
+      .replace(/(^|[\s:])الجيد(?=\s|$)/g, '$1المجيد')
+      .replace(/(^|[\s:])الختار(?=\s|$)/g, '$1المختار')
+      .replace(/(^|[\s:])الحمودي(?=\s|$)/g, '$1المحمودي')
+      .replace(/(^|[\s:])القرحي(?=\s|$)/g, '$1المقرحي')
+      .replace(/(^|[\s:])الصري(?=\s|$)/g, '$1المصري')
+      .replace(/(^|[\s:])السماري(?=\s|$)/g, '$1المسماري')
+      .replace(/(^|[\s:])الطيري(?=\s|$)/g, '$1المطيري')
+      .replace(/(^|[\s:])النصوري(?=\s|$)/g, '$1المنصوري')
+      .replace(/(^|[\s:])الجذوب(?=\s|$)/g, '$1المجذوب')
+      .replace(/(^|[\s:])العتوق(?=\s|$)/g, '$1المعتوق')
+      .replace(/(^|[\s:])القريف(?=\s|$)/g, '$1المقريف')
+      .replace(/(^|[\s:])القصبي(?=\s|$)/g, '$1المقصبي')
+      .replace(/(^|[\s:])الليطان(?=\s|$)/g, '$1المليطان')
+      // إصلاح حرف الألف المفقود في أربطة (لا / لأ / لإ / لآ)
+      .replace(/كيلن([يى])(?=\s|$)/g, 'كيلان$1')
+      .replace(/(^|[\s:])حل(?=\s|$)/g, '$1حلا')
+      .replace(/([اأإ])يلف(?=\s|$)/g, '$1يلاف')
+      .replace(/(^|[\s:])سولف(?=\s|$)/g, '$1سولاف')
+      .replace(/(^|[\s:])ملذ(?=\s|$)/g, '$1ملاذ')
+      .replace(/(^|[\s:])لفي(?=\s|$)/g, '$1لافي')
+      .replace(/(^|[\s:])العلل([يى])(?=\s|$)/g, '$1العلال$2')
+      .replace(/(^|[\s:])الصلح([يى])(?=\s|$)/g, '$1الصلاح$2')
       .replace(/ميلد/g, 'ميلاد')
       .replace(/عبدالسلم/g, 'عبدالسلام')
       .replace(/السلم(?=\s|$)/g, 'السلام')
       .replace(/اخلص(?=\s|$)/g, 'إخلاص')
-      .replace(/(^|\s)ولء(?=\s|$)/g, '$1ولاء')
-      .replace(/(^|\s)الء(?=\s|$)/g, '$1آلاء')
-      .replace(/(^|\s)علء(?=\s|$)/g, '$1علاء')
-      .replace(/(^|\s)نجلء(?=\s|$)/g, '$1نجلاء')
-      .replace(/(^|\s)شهلء(?=\s|$)/g, '$1شهلاء')
+      .replace(/(^|[\s:])ولء(?=\s|$)/g, '$1ولاء')
+      .replace(/(^|[\s:])الء(?=\s|$)/g, '$1آلاء')
+      .replace(/(^|[\s:])علء(?=\s|$)/g, '$1علاء')
+      .replace(/(^|[\s:])نجلء(?=\s|$)/g, '$1نجلاء')
+      .replace(/(^|[\s:])شهلء(?=\s|$)/g, '$1شهلاء')
+      .replace(/(^|[\s:])جلء(?=\s|$)/g, '$1جلاء')
       .replace(/لء(?=\s|$)/g, 'لاء')
-      .replace(/(^|\s)صلح(?=\s|$)/g, '$1صلاح')
-      .replace(/(^|\s)احلم(?=\s|$)/g, '$1أحلام')
-      .replace(/(^|\s)اسلم(?=\s|$)/g, '$1إسلام')
-      .replace(/(^|\s)بلل(?=\s|$)/g, '$1بلال')
-      .replace(/(^|\s)جلل(?=\s|$)/g, '$1جلال')
-      .replace(/(^|\s)هلل(?=\s|$)/g, '$1هلال')
-      .replace(/(^|\s)طلل(?=\s|$)/g, '$1طلال')
+      .replace(/(^|[\s:])صلح(?=\s|$)/g, '$1صلاح')
+      .replace(/(^|[\s:])فلح(?=\s|$)/g, '$1فلاح')
+      .replace(/(^|[\s:])احلم(?=\s|$)/g, '$1أحلام')
+      .replace(/(^|[\s:])اسلم(?=\s|$)/g, '$1إسلام')
+      .replace(/(^|[\s:])بلل(?=\s|$)/g, '$1بلال')
+      .replace(/(^|[\s:])جلل(?=\s|$)/g, '$1جلال')
+      .replace(/(^|[\s:])هلل(?=\s|$)/g, '$1هلال')
+      .replace(/(^|[\s:])طلل(?=\s|$)/g, '$1طلال')
+      .replace(/(^|[\s:])دلل(?=\s|$)/g, '$1دلال')
+      .replace(/(^|[\s:])الهلل([يى])(?=\s|$)/g, '$1الهلال$2')
+      .replace(/(^|[\s:])الجلل([يى])(?=\s|$)/g, '$1الجلال$2')
+      .replace(/(^|[\s:])الكلن([يى])(?=\s|$)/g, '$1الكلان$2')
       // إصلاح تكرار الياء/الألف المقصورة في نهاية الكلمة
       .replace(/(موس|عيس|مصطف|مرتض|مجتب|نجو|سلو|تقو|ليل|رؤ)[ىي]{2}(?=\s|$)/g, '$1ى')
       .replace(/([\u0621-\u064A])[ىي]{2}(?=\s|$)/g, '$1ي')
@@ -1662,11 +1858,15 @@
     if (currentSearchMode === 'name') inp.placeholder = 'اكتب اسم الطالب أو جزءاً منه (يتجاهل الهاء/التاء/الياء/الألف)...';
     else if (currentSearchMode === 'nationalId') inp.placeholder = 'أدخل الرقم الوطني أو جزءاً منه...';
     else inp.placeholder = 'أدخل رقم القيد...';
+    currentSearchPage = 1;
     renderSearchResults();
   });
 
-  document.getElementById('searchInput').addEventListener('input', renderSearchResults);
-  document.getElementById('searchYearFilter').addEventListener('change', renderSearchResults);
+  let currentSearchPage = 1;
+  const SEARCH_PAGE_SIZE = 10;
+
+  document.getElementById('searchInput').addEventListener('input', () => { currentSearchPage = 1; renderSearchResults(); });
+  document.getElementById('searchYearFilter').addEventListener('change', () => { currentSearchPage = 1; renderSearchResults(); });
 
   function renderSearchResults() {
     const yearFilter = document.getElementById('searchYearFilter').value;
@@ -1689,9 +1889,11 @@
 
     const info = document.getElementById('searchResultsInfo');
     const container = document.getElementById('resultsContainer');
+    const pagBar = document.getElementById('paginationContainer');
 
     if (allStudents.length === 0) {
       info.textContent = '';
+      if (pagBar) { pagBar.innerHTML = ''; pagBar.classList.add('hidden'); }
       container.innerHTML = `
         <div class="card" style="grid-column:1/-1;text-align:center;padding:28px 16px;">
           <div style="font-size:2.2rem;margin-bottom:8px;">🗂️</div>
@@ -1704,14 +1906,22 @@
       return;
     }
 
-    info.textContent = `نتائج البحث: ${filtered.length} من أصل ${allStudents.length} سجل`;
-
     if (filtered.length === 0) {
+      info.textContent = `نتائج البحث: 0 من أصل ${allStudents.length} سجل`;
+      if (pagBar) { pagBar.innerHTML = ''; pagBar.classList.add('hidden'); }
       container.innerHTML = `<div class="card" style="grid-column:1/-1;text-align:center;color:var(--muted);">لا توجد نتائج مطابقة لبحثك.</div>`;
       return;
     }
 
-    container.innerHTML = filtered.slice(0, 100).map(st => {
+    const totalPages = Math.max(1, Math.ceil(filtered.length / SEARCH_PAGE_SIZE));
+    if (currentSearchPage > totalPages) currentSearchPage = totalPages;
+    if (currentSearchPage < 1) currentSearchPage = 1;
+    const startIdx = (currentSearchPage - 1) * SEARCH_PAGE_SIZE;
+    const pageItems = filtered.slice(startIdx, startIdx + SEARCH_PAGE_SIZE);
+
+    info.textContent = `نتائج البحث: ${filtered.length} من أصل ${allStudents.length} سجل • صفحة ${currentSearchPage} من ${totalPages}`;
+
+    container.innerHTML = pageItems.map(st => {
       const initials = (st.name || 'ط').trim().charAt(0);
       const avatar = st.photoDataUrl
         ? `<img class="student-avatar" src="${st.photoDataUrl}" alt="${escapeHtml(st.name)}" />`
@@ -1742,7 +1952,48 @@
           </div>
         </div>`;
     }).join('');
+
+    if (pagBar) {
+      if (totalPages <= 1) {
+        pagBar.innerHTML = '';
+        pagBar.classList.add('hidden');
+      } else {
+        pagBar.classList.remove('hidden');
+        const pages = [];
+        if (totalPages <= 7) {
+          for (let pNum = 1; pNum <= totalPages; pNum++) pages.push(pNum);
+        } else {
+          pages.push(1);
+          if (currentSearchPage > 3) pages.push('...');
+          const from = Math.max(2, currentSearchPage - 1);
+          const to = Math.min(totalPages - 1, currentSearchPage + 1);
+          for (let pNum = from; pNum <= to; pNum++) pages.push(pNum);
+          if (currentSearchPage < totalPages - 2) pages.push('...');
+          pages.push(totalPages);
+        }
+
+        let pagHtml = `<button type="button" class="page-btn" data-page="${currentSearchPage - 1}" ${currentSearchPage === 1 ? 'disabled' : ''} aria-label="السابق">‹</button>`;
+        pages.forEach(item => {
+          if (item === '...') {
+            pagHtml += `<span class="page-ellipsis">…</span>`;
+          } else {
+            pagHtml += `<button type="button" class="page-btn ${item === currentSearchPage ? 'active' : ''}" data-page="${item}">${item}</button>`;
+          }
+        });
+        pagHtml += `<button type="button" class="page-btn" data-page="${currentSearchPage + 1}" ${currentSearchPage === totalPages ? 'disabled' : ''} aria-label="التالي">›</button>`;
+        pagBar.innerHTML = pagHtml;
+      }
+    }
   }
+
+  document.getElementById('paginationContainer').addEventListener('click', (e) => {
+    const btn = e.target.closest('.page-btn[data-page]');
+    if (!btn || btn.disabled) return;
+    currentSearchPage = parseInt(btn.dataset.page, 10);
+    renderSearchResults();
+    const infoEl = document.getElementById('searchResultsInfo');
+    if (infoEl) infoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   document.getElementById('resultsContainer').addEventListener('click', async (e) => {
     const card = e.target.closest('.student-card');
@@ -2511,6 +2762,9 @@
                       const code = fc + wi;
                       if (fmap.get(code) === 'ا' && wArr[wi] >= 750) {
                         fmap.set(code, 'هللا');
+                      } else if (fmap.get(code) === 'ل') {
+                        if (wArr[wi] >= 330 && wArr[wi] <= 360) fmap.set(code, 'مل');
+                        else if (wArr[wi] >= 515 && wArr[wi] <= 560) fmap.set(code, 'ال');
                       }
                     }
                   }
@@ -2639,8 +2893,8 @@
 
       const nameSub = p1.items.filter(it => it.y >= -392 && it.y <= -365 && it.x >= 20 && it.x <= 436.2 && it.t !== ':').sort((a, b) => a.x - b.x);
       const name = visualRtlToLogical(nameSub.map(s => s.t).join(''));
-      const birthInfo = box1(-430, -400, 315, 480).replace(/^لد:\s*/, '').trim();
-      const motherName = box1(-430, -400, 20, 235).replace(/^امل:\s*/, '').trim();
+      const birthInfo = fixCrystalArabic(box1(-430, -400, 315, 480).replace(/^لد:\s*/, '').trim());
+      const motherName = fixCrystalArabic(box1(-430, -400, 20, 235).replace(/^امل:\s*/, '').trim());
       const nationalId = box1(-475, -445, 320, 460);
       let regNo = box1(-475, -445, 20, 150);
       const footerRef = box1(-835, -810, 10, 450);
